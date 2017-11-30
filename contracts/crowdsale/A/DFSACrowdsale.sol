@@ -50,6 +50,15 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     }
   }
 
+  function setContracts(address _token, address _wallet) onlyAdmins whenPaused {
+    wallet = _wallet;
+    token = DFSTokenA(_token);
+  }
+
+  function transferTokenOwnership(address _nextOwner) onlyAdmins whenPaused {
+    token.transferOwnership(_nextOwner);
+  }
+
   // overriding buyTokens function from CrowdsaleA
   function buyTokens(address beneficiary) public whenNotPaused payable {
     require(beneficiary != address(0));
