@@ -25,4 +25,27 @@ contract ControlCentre is Ownable {
     ControlCentreInterface(_crowdsaleAddress).removeAdmin(address(this));
     return true;
   }
+
+  function transferDataCentreOwnership(address _crowdsaleAddress, address _nextOwner) public onlyOwner returns (bool) {
+    address token = ControlCentreInterface(_crowdsaleAddress).token();
+    ControlCentreInterface(_crowdsaleAddress).pause();
+    ControlCentreInterface(_crowdsaleAddress).transferTokenOwnership(address(this));
+    ControlCentreInterface(token).pause();
+    ControlCentreInterface(token).transferDataCentreOwnership(_nextOwner);
+    ControlCentreInterface(token).transferOwnership(_crowdsaleAddress);
+    ControlCentreInterface(_crowdsaleAddress).removeAdmin(address(this));
+    return true;
+  }
+
+  function returnDataCentreOwnership(address _crowdsaleAddress) public onlyOwner returns (bool) {
+    address token = ControlCentreInterface(_crowdsaleAddress).token();
+    address dataCentreAddr = ControlCentreInterface(token).dataCentreAddr();
+    ControlCentreInterface(dataCentreAddr).transferOwnership(token);
+    ControlCentreInterface(_crowdsaleAddress).transferTokenOwnership(address(this));
+    ControlCentreInterface(token).unpause();
+    ControlCentreInterface(token).transferOwnership(_crowdsaleAddress);
+    ControlCentreInterface(_crowdsaleAddress).unpause();
+    ControlCentreInterface(_crowdsaleAddress).removeAdmin(address(this));
+    return true;
+  }
 }
