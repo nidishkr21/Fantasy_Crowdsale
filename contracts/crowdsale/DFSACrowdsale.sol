@@ -1,8 +1,7 @@
 pragma solidity ^0.4.11;
 
-import "../../Pausable.sol";
 import "./CappedCrowdsaleA.sol";
-import "../../token/A/DFSTokenA.sol";
+import "../token/DFSTokenA.sol";
 
 
 /**
@@ -16,7 +15,7 @@ import "../../token/A/DFSTokenA.sol";
  * After adding multiple features it's good practice to run integration tests
  * to ensure that subcontracts works together as intended.
  */
-contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
+contract DFSACrowdsale is CappedCrowdsaleA {
 
   // how many token units a buyer gets per wei
   mapping (uint => uint) internal swapRate;
