@@ -1,6 +1,8 @@
 const DFSACrowdsale = artifacts.require('./crowdsale/A/DFSACrowdsale.sol');
 const DFSTokenA = artifacts.require('./token/A/DFSTokenA.sol');
 const DFSBCrowdsale = artifacts.require('./crowdsale/B/DFSBCrowdsale.sol');
+const DFSTokenB = artifacts.require('./token/B/DFSTokenB.sol');
+const DataCentre = artifacts.require('./token/DataCentre.sol');
 const MultisigWallet = artifacts.require('./multisig/solidity/MultiSigWalletWithDailyLimit.sol');
 import {advanceBlock} from './helpers/advanceToBlock';
 import latestTime from './helpers/latestTime';
@@ -84,4 +86,71 @@ contract('Crowdsale', (accounts) => {
       assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');
     });
   });
+
+  describe('#CrowdsaleB details', () => {
+    let tokenB;
+    let dfsBCrowdsale;
+
+    beforeEach(async () => {
+      await advanceBlock();
+      const startTime = latestTime();
+      tokenB = await DFSTokenB.new();
+      dfsBCrowdsale = await DFSBCrowdsale.new(startTime, PRE_SALE_DAYS, tokenB.address, multisigWallet.address);
+      await tokenB.transferOwnership(dfsBCrowdsale.address);
+      await dfsBCrowdsale.unpause();
+    });
+
+    it('should allow start CrowdsaleB properly', async () => {
+      // checking cap details
+      const phasesoftCap1 = await dfsBCrowdsale.softCap.call(0);
+      const phasesoftCap2 = await dfsBCrowdsale.softCap.call(1);
+
+      assert.equal(30000000e18, phasesoftCap1.toNumber(), 'softCap for phase 1 INCORRECT');
+      assert.equal(40000000e18, phasesoftCap2.toNumber(), 'softCap for phase 2 INCORRECT');
+
+      //checking initial token distribution details
+      const initialBalance = await tokenB.balanceOf.call(accounts[0]);
+      assert.equal(30000000e18, initialBalance.toNumber(), 'initialBalance for sale NOT distributed properly');
+
+      //checking token and wallet address
+      const tokenAddress = await dfsBCrowdsale.token.call();
+      const walletAddress = await dfsBCrowdsale.wallet.call();
+      assert.equal(tokenAddress, tokenB.address, 'address for tokenB in contract not set');
+      assert.equal(walletAddress, multisigWallet.address, 'address for multisig wallet in contract not set');
+    });
+  })
+
+  describe('#CrowdsaleB security considerations', () => {
+    let tokenB;
+    let dfsBCrowdsale;
+
+    beforeEach(async () => {
+      await advanceBlock();
+      const startTime = latestTime();
+      tokenB = await DFSTokenB.new();
+      dfsBCrowdsale = await DFSBCrowdsale.new(startTime, PRE_SALE_DAYS, tokenB.address, multisigWallet.address);
+      await tokenB.transferOwnership(dfsBCrowdsale.address);
+      await dfsBCrowdsale.unpause();
+    });
+
+    it('should allow to transfer ownership of tokenB contract to FOUNDERS', async () => {
+      // pause and transfer ownership
+      await dfsBCrowdsale.pause();
+      await dfsBCrowdsale.transferTokenOwnership(multisigWallet.address);
+      const newOwner = await tokenB.owner.call();
+      assert.equal(newOwner, multisigWallet.address, 'ownership not transferred');
+    });
+
+    it('should allow to set contracts', async () => {
+      // pause and transfer ownership
+      const multiSigNew = await MultisigWallet.new(FOUNDERS, 3, 10*MOCK_ONE_ETH);
+      const tokenNew = await DFSTokenB.new("0x00");
+      await dfsBCrowdsale.pause();
+      await dfsBCrowdsale.setContracts(tokenNew.address, multiSigNew.address);
+      const tokenSet = await dfsBCrowdsale.token.call();
+      const multiSigWalletSet = await dfsBCrowdsale.wallet.call();
+      assert.equal(tokenSet, tokenNew.address, 'contracts not set');
+      assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');
+    });
+  })
 });
