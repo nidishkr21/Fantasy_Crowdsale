@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
 
+import './DFSTokenAControl.sol';
 
 
 /**
@@ -10,7 +11,7 @@ pragma solidity ^0.4.11;
  * @dev https://github.com/ethereum/EIPs/issues/20
  * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
-contract DFSTokenA {
+contract DFSTokenA is DFSTokenAControl {
 
   string public constant name = "DFS Token A";
   string public constant symbol = "DFA";

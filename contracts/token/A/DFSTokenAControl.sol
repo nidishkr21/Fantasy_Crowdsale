@@ -3,8 +3,9 @@ pragma solidity ^0.4.11;
 import '../../SafeMath.sol';
 import '../../ERC20.sol';
 import '../../ERC223ReceivingContract.sol';
+import './DataManagerA.sol';
 
-contract DFSTokenAControl is ERC20 {
+contract DFSTokenAControl is ERC20, DataManagerA {
   using SafeMath for uint;
 
   // not necessary to store in data centre
@@ -79,8 +80,10 @@ contract DFSTokenAControl is ERC20 {
   }
 
   function mint(address _to, uint256 _amount) whenNotPaused onlyOwner canMint public returns (bool) {
+    bytes memory empty;
     _setTotalSupplyDFA(totalSupply().add(_amount));
     _setDFABalanceOf(_to, balanceOf(_to).add(_amount));
+    _checkDestination(msg.sender, _to, _amount, empty);
     Mint(_to, _amount);
     Transfer(address(0), _to, _amount);
     return true;
