@@ -12,6 +12,14 @@ contract DataManagerA is PausableToken {
     dataCentreAddr = address(createDataCentre());
   }
 
+  function setDataCentreAddress(address _dataCentreAddr) public onlyOwner whenPaused {
+    dataCentreAddr = _dataCentreAddr;
+  }
+
+  function transferDataCentreOwnership(address _nextOwner) public onlyOwner whenPaused {
+    DataCentre(dataCentreAddr).transferOwnership(_nextOwner);
+  }
+
   // internal functions
   function createDataCentre() internal returns (DataCentre) {
     return new DataCentre();
