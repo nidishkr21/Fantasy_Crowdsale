@@ -59,22 +59,39 @@ contract DFSBCrowdsale is Pausable, CappedCrowdsaleB {
     token.transferOwnership(_nextOwner);
   }
 
-  // overriding buyTokens function from CrowdsaleB
+  // overriding buyTokens function from CrowdsaleA
   function buyTokens(address beneficiary) public whenNotPaused payable {
+    uint256 phase = now >= startTime.add(preSaleTime) ? 1 : 0;
+
+    require(!end[phase]);
     require(beneficiary != address(0));
+    require(rate() > 0);
+    require(validatePurchase());
+
     uint256 weiAmount = msg.value;
     // calculate token amount to be created
     uint256 tokens = weiAmount.mul(rate());
-    recordSupply(tokens);
 
+    setSupply(totalSupply[phase].add(tokens), phase);
+
+    if(!withSoftCap(phase)) {
+      end[phase] = true;
+      uint256 returnTokens = totalSupply[phase].sub(softCap[phase]);
+      uint256 refund = returnTokens.div(rate());
+      tokens = tokens.sub(returnTokens);
+      weiAmount = weiAmount.sub(refund);
+      msg.sender.transfer(refund);
+    }
     // update state
     weiRaised = weiRaised.add(weiAmount);
-
     token.mint(beneficiary, tokens);
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
-    assert(validPurchase());
+    forwardFunds(weiAmount);
+  }
 
-    forwardFunds();
+  // overriding forwardFunds from CrowdsaleA
+  function forwardFunds(uint256 _value) internal {
+    wallet.transfer(_value);
   }
 
 }

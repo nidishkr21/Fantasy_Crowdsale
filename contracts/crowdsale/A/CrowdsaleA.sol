@@ -57,12 +57,12 @@ contract CrowdsaleA {
 
   // send ether to the fund collection wallet
   // override to create custom fund forwarding mechanisms
-  function forwardFunds() internal {
+  function forwardFunds(uint256 _value) internal {
     wallet.transfer(msg.value);
   }
 
   // @return true if the transaction can buy tokens
-  function validPurchase() internal constant returns (bool) {
+  function validatePurchase() internal constant returns (bool) {
     bool withinPeriod = now >= startTime && now <= endTime;
     bool nonZeroPurchase = msg.value != 0;
     return withinPeriod && nonZeroPurchase;
