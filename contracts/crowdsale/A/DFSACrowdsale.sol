@@ -25,12 +25,12 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     CappedCrowdsaleA()
     CrowdsaleA(_startTime, _preSaleDays, _token, _wallet)
   {
-    swapRate[5] = 4125;
-    swapRate[4] = 3300;
-    swapRate[3] = 2750;
-    swapRate[2] = 2357;
-    swapRate[1] = 2062;
-    swapRate[0] = 1833;
+    swapRate[5] = 4000;
+    swapRate[4] = 3200;
+    swapRate[3] = 2560;
+    swapRate[2] = 2400;
+    swapRate[1] = 2048;
+    swapRate[0] = 1880;
   }
 
 
@@ -72,16 +72,15 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     // calculate token amount to be created
     uint256 tokens = weiAmount.mul(rate());
 
-    setSupply(totalSupply[phase].add(tokens), phase);
-
-    if(!withSoftCap(phase)) {
+    if(!withSoftCap(phase, tokens)) {
       end[phase] = true;
-      uint256 returnTokens = totalSupply[phase].sub(softCap[phase]);
-      uint256 refund = returnTokens.div(rate());
-      tokens = tokens.sub(returnTokens);
+      uint256 refund = (tokens.add(totalSupply[phase]).sub(softCap[phase])).div(rate());
+      tokens = softCap[phase].sub(totalSupply[phase]);
       weiAmount = weiAmount.sub(refund);
       msg.sender.transfer(refund);
     }
+
+    setSupply(totalSupply[phase].add(tokens), phase);
     // update state
     weiRaised = weiRaised.add(weiAmount);
     token.mint(beneficiary, tokens);

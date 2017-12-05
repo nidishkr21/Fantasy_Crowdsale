@@ -31,7 +31,7 @@ contract('DFSTokenA', (accounts) => {
   describe('#transfer', () => {
     it('should allow investors to trasnfer', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
       // buy tokens
@@ -50,7 +50,7 @@ contract('DFSTokenA', (accounts) => {
 
     it('should not allow scammer and transfer un-owned tokens', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
       const SCAMMER = accounts[6];
@@ -76,7 +76,7 @@ contract('DFSTokenA', (accounts) => {
 
     it('should not allow transfer tokens more than balance', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
 
@@ -103,7 +103,7 @@ contract('DFSTokenA', (accounts) => {
   describe('#transferFrom', () => {
     it('should allow investors to approve and transferFrom', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
       // buy tokens
@@ -127,7 +127,7 @@ contract('DFSTokenA', (accounts) => {
 
     it('should not allow transferFrom tokens more than allowed', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
 
@@ -155,7 +155,7 @@ contract('DFSTokenA', (accounts) => {
 
     it('should not allow transferFrom tokens that are not allowed', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
       const SCAMMER = accounts[6];
@@ -181,7 +181,7 @@ contract('DFSTokenA', (accounts) => {
 
     it('should not allow scammers to approve un-owned tokens', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
       const BENEFICIARY = accounts[5];
       const SCAMMER = accounts[6];

@@ -25,12 +25,12 @@ contract DFSBCrowdsale is Pausable, CappedCrowdsaleB {
     CappedCrowdsaleB()
     CrowdsaleB(_startTime, _preSaleDays, _token, _wallet)
   {
-    swapRate[5] = 825;
-    swapRate[4] = 660;
-    swapRate[3] = 550;
-    swapRate[2] = 471;
-    swapRate[1] = 412;
-    swapRate[0] = 366;
+    swapRate[5] = 800;
+    swapRate[4] = 640;
+    swapRate[3] = 512;
+    swapRate[2] = 480;
+    swapRate[1] = 400;
+    swapRate[0] = 320;
   }
 
 
@@ -62,7 +62,7 @@ contract DFSBCrowdsale is Pausable, CappedCrowdsaleB {
   // overriding buyTokens function from CrowdsaleA
   function buyTokens(address beneficiary) public whenNotPaused payable {
     uint256 phase = now >= startTime.add(preSaleTime) ? 1 : 0;
-
+    
     require(!end[phase]);
     require(beneficiary != address(0));
     require(rate() > 0);
@@ -72,16 +72,15 @@ contract DFSBCrowdsale is Pausable, CappedCrowdsaleB {
     // calculate token amount to be created
     uint256 tokens = weiAmount.mul(rate());
 
-    setSupply(totalSupply[phase].add(tokens), phase);
-
-    if(!withSoftCap(phase)) {
+    if(!withSoftCap(phase, tokens)) {
       end[phase] = true;
-      uint256 returnTokens = totalSupply[phase].sub(softCap[phase]);
-      uint256 refund = returnTokens.div(rate());
-      tokens = tokens.sub(returnTokens);
+      uint256 refund = (tokens.add(totalSupply[phase]).sub(softCap[phase])).div(rate());
+      tokens = softCap[phase].sub(totalSupply[phase]);
       weiAmount = weiAmount.sub(refund);
       msg.sender.transfer(refund);
     }
+
+    setSupply(totalSupply[phase].add(tokens), phase);
     // update state
     weiRaised = weiRaised.add(weiAmount);
     token.mint(beneficiary, tokens);

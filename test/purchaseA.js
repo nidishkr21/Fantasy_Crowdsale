@@ -28,9 +28,9 @@ contract('DFSACrwodsale', (accounts) => {
   });
 
   describe('#purchase', () => {
-    it('should allow investors to buy tokens in Pre Sale at 4125 swapRate', async () => {
+    it('should allow investors to buy tokens in Pre Sale at 4000 swapRate', async () => {
 
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const INVESTOR = accounts[4];
 
       // buy tokens
@@ -43,9 +43,9 @@ contract('DFSACrwodsale', (accounts) => {
       assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
     });
 
-    it('should allow investors to buy tokens in Crowdsale at 3300 swapRate', async () => {
+    it('should allow investors to buy tokens in Crowdsale at 3200 swapRate', async () => {
 
-      const swapRate = new BigNumber(3300);
+      const swapRate = new BigNumber(3200);
       const INVESTOR = accounts[4];
 
       // forward time by PRE_SALE_DAYS
@@ -61,9 +61,9 @@ contract('DFSACrwodsale', (accounts) => {
       assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
     });
 
-    it('should allow investors to buy tokens in Crowdsale at 2750 swapRate', async () => {
+    it('should allow investors to buy tokens in Crowdsale at 2560 swapRate', async () => {
 
-      const swapRate = new BigNumber(2750);
+      const swapRate = new BigNumber(2560);
       const INVESTOR = accounts[4];
 
       // forward time by PRE_SALE_DAYS + 7 days
@@ -79,9 +79,9 @@ contract('DFSACrwodsale', (accounts) => {
       assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
     });
 
-    it('should allow investors to buy tokens in Crowdsale at 2357 swapRate', async () => {
+    it('should allow investors to buy tokens in Crowdsale at 2400 swapRate', async () => {
 
-      const swapRate = new BigNumber(2357);
+      const swapRate = new BigNumber(2400);
       const INVESTOR = accounts[4];
 
       // forward time by PRE_SALE_DAYS + 7 days
@@ -97,9 +97,9 @@ contract('DFSACrwodsale', (accounts) => {
       assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
     });
 
-    it('should allow investors to buy tokens in Crowdsale at 2062 swapRate', async () => {
+    it('should allow investors to buy tokens in Crowdsale at 2048 swapRate', async () => {
 
-      const swapRate = new BigNumber(2062);
+      const swapRate = new BigNumber(2048);
       const INVESTOR = accounts[4];
 
       // forward time by PRE_SALE_DAYS + 13 days
@@ -115,9 +115,9 @@ contract('DFSACrwodsale', (accounts) => {
       assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
     });
 
-    it('should allow investors to buy tokens in Crowdsale at 1833 swapRate', async () => {
+    it('should allow investors to buy tokens in Crowdsale at 1880 swapRate', async () => {
 
-      const swapRate = new BigNumber(1833);
+      const swapRate = new BigNumber(1880);
       const INVESTOR = accounts[4];
 
       // forward time by 10 days
@@ -158,7 +158,7 @@ contract('DFSACrwodsale', (accounts) => {
     it('should allow investors buying just below Pre Sale cap', async () => {
 
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(4125);
+      const swapRate = new BigNumber(4000);
       const amountEth = new BigNumber(14545).mul(MOCK_ONE_ETH);
       const tokensAmount = swapRate.mul(amountEth);
 
@@ -177,7 +177,7 @@ contract('DFSACrwodsale', (accounts) => {
     it('should allow investors buying just below Crowdsale cap', async () => {
 
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(3300);
+      const swapRate = new BigNumber(3200);
       const amountEth = new BigNumber(60606).mul(MOCK_ONE_ETH);
       const tokensAmount = swapRate.mul(amountEth);
 
@@ -203,47 +203,62 @@ contract('DFSACrwodsale', (accounts) => {
     it('should refund investors when buying above Pre Sale cap', async () => {
 
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(4125);
-      const amountEth = new BigNumber(14546).mul(MOCK_ONE_ETH);
+      const swapRate = new BigNumber(4000);
+      const amountEth = new BigNumber(15001).mul(MOCK_ONE_ETH);
+      const softCap = await dfsACrowdsale.softCap.call(0);
       const balanceBefore = await web3.eth.getBalance(INVESTORS);
+
       // buy tokens
       await dfsACrowdsale.buyTokens(INVESTORS, {value: amountEth, from: INVESTORS, gasPrice: 0});
+      const tokensAmount = amountEth.mul(swapRate);
       const walletBalance = await web3.eth.getBalance(multisigWallet.address);
       const balanceInvestor = await tokenA.balanceOf.call(INVESTORS);
       const balanceAfter = await web3.eth.getBalance(INVESTORS);
       const ethInvested = balanceBefore.sub(balanceAfter);
-      assert(walletBalance.toNumber() < amountEth.toNumber(), 'full amount transfer still took place');
+      const ethRefunded = amountEth.sub(balanceBefore).add(balanceAfter);
+      const ethRefundedCal = (tokensAmount.sub(softCap)).div(swapRate);
+      const totalSupply = await dfsACrowdsale.totalSupply.call(0);
+      assert.equal(totalSupply.toNumber(), softCap.toNumber(), 'rounding errors encountered');
+      assert.equal(ethRefundedCal.toNumber(), ethRefunded.toNumber(), 'amount refunded not correct');
       assert.equal(walletBalance.toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
       assert.equal(balanceInvestor.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
     });
 
     it('should refund investors when buying above Crowdsale cap', async () => {
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(3300);
-      const amountEth = new BigNumber(60607).mul(MOCK_ONE_ETH);
+      const swapRate = new BigNumber(3200);
+      const amountEth = new BigNumber(62501).mul(MOCK_ONE_ETH);
+      const softCap = await dfsACrowdsale.softCap.call(1);
       const balanceBefore = await web3.eth.getBalance(INVESTORS);
 
-      // forward time by PRE_SALE_DAYS days
+      // forward time by 20 days
       await increaseTime(86400 * PRE_SALE_DAYS);
 
       // buy tokens
       await dfsACrowdsale.buyTokens(INVESTORS, {value: amountEth, from: INVESTORS, gasPrice: 0});
+      const tokensAmount = amountEth.mul(swapRate);
       const walletBalance = await web3.eth.getBalance(multisigWallet.address);
       const balanceInvestor = await tokenA.balanceOf.call(INVESTORS);
       const balanceAfter = await web3.eth.getBalance(INVESTORS);
       const ethInvested = balanceBefore.sub(balanceAfter);
-      assert(walletBalance.toNumber() < amountEth.toNumber(), 'full amount transfer still took place');
+      const ethRefunded = amountEth.sub(balanceBefore).add(balanceAfter);
+      const ethRefundedCal = (tokensAmount.sub(softCap)).div(swapRate);
+      const totalSupply = await dfsACrowdsale.totalSupply.call(1);
+      assert.equal(totalSupply.toNumber(), softCap.toNumber(), 'rounding errors encountered');
+      assert.equal(ethRefundedCal.toNumber(), ethRefunded.toNumber(), 'amount refunded not correct');
       assert.equal(walletBalance.toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
       assert.equal(balanceInvestor.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
     });
+
+
   });
 
   describe('#endReached', () => {
     it('should not allow investors to buy after cap reached during Pre Sale', async () => {
 
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(4125);
-      const amountEth = new BigNumber(14546).mul(MOCK_ONE_ETH);
+      const swapRate = new BigNumber(4000);
+      const amountEth = new BigNumber(15001).mul(MOCK_ONE_ETH);
       const balanceBefore = await web3.eth.getBalance(INVESTORS);
       // buy tokens
       await dfsACrowdsale.buyTokens(INVESTORS, {value: amountEth, from: INVESTORS, gasPrice: 0});
@@ -265,8 +280,8 @@ contract('DFSACrwodsale', (accounts) => {
     it('should not allow investors to buy after cap reached during crowdsale', async () => {
 
       const INVESTORS = accounts[4];
-      const swapRate = new BigNumber(3300);
-      const amountEth = new BigNumber(60607).mul(MOCK_ONE_ETH);
+      const swapRate = new BigNumber(3200);
+      const amountEth = new BigNumber(62501).mul(MOCK_ONE_ETH);
       const balanceBefore = await web3.eth.getBalance(INVESTORS);
 
       // forward time by 20 days
