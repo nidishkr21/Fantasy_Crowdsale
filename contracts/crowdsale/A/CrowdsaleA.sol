@@ -2,39 +2,27 @@ pragma solidity ^0.4.11;
 
 import '../../SafeMath.sol';
 
+
 /**
- * @title CrowdsaleA
- * @dev CrowdsaleA is a base contract for managing a token CrowdsaleA.
- * Crowdsales have a start and end timestamps, where investors can make
- * token purchases and the CrowdsaleA will assign them tokens based
- * on a token per ETH rate. Funds collected are forwarded to a wallet
- * as they arrive.
+ * @title CappedCrowdsaleA
+ * @dev Extension of CrowdsaleA with a max amount of funds raised
  */
 contract CrowdsaleA {
   using SafeMath for uint256;
+
   // The token being sold
   address public tokenAddr;
-
-  // start and end timestamps where investments are allowed (both inclusive)
   uint256 public startTime;
   uint256 public preSaleTime;
   uint256 public endTime;
-
-  // address where funds are collected
   address public wallet;
-
-  // amount of raised money in wei
   uint256 public weiRaised;
 
-  /**
-   * event for token purchase logging
-   * @param purchaser who paid for the tokens
-   * @param beneficiary who got the tokens
-   * @param value weis paid for purchase
-   * @param amount amount of tokens purchased
-   */
-  event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
+  uint256[2] public softCap;
+  uint256[2] public totalSupply;
+  bool[2] public end;
 
+  event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
   function CrowdsaleA(uint256 _startTime, uint256 _preSaleDays, address _tokenAddr, address _wallet) {
     require(_wallet != address(0));
@@ -44,32 +32,33 @@ contract CrowdsaleA {
     endTime = startTime + preSaleTime + (31 days);
     wallet = _wallet;
     tokenAddr = _tokenAddr;
+    softCap = [60000000e18, 200000000e18];
   }
 
-  // fallback function can be used to buy tokens
-  function () payable {
-    buyTokens(msg.sender);
+
+  function withSoftCap(uint256 phase, uint256 tokens) internal returns (bool) {
+    return totalSupply[phase].add(tokens) < softCap[phase];
   }
 
-  // low level token purchase function
-  function buyTokens(address beneficiary) public payable;
-
-  // send ether to the fund collection wallet
-  // override to create custom fund forwarding mechanisms
-  function forwardFunds(uint256 _value) internal {
-    wallet.transfer(msg.value);
+  function setSupply(uint256 newTotalSupply, uint256 phase) internal returns (uint256) {
+    totalSupply[phase] = newTotalSupply;
   }
 
-  // @return true if the transaction can buy tokens
   function validatePurchase() internal constant returns (bool) {
     bool withinPeriod = now >= startTime && now <= endTime;
     bool nonZeroPurchase = msg.value != 0;
     return withinPeriod && nonZeroPurchase;
   }
 
+  // overriding CrowdsaleA#hasEnded to add hardCap logic
   // @return true if CrowdsaleA event has ended
   function saleHasEnded() public constant returns (bool) {
-    return now > endTime;
+    return now > endTime || !withSoftCap(1, 0);
+  }
+
+  // @return true if presale event has ended
+  function preSaleHasEnded() public constant returns (bool) {
+    return now >= (startTime + 7 days) || !withSoftCap(0, 0);
   }
 
 }

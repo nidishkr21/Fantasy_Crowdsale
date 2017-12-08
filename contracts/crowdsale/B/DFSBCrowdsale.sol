@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 
 import "../../Pausable.sol";
-import "./CappedCrowdsaleB.sol";
+import "./CrowdsaleB.sol";
 import "../../token/B/DFSTokenB.sol";
 
 
@@ -16,13 +16,12 @@ import "../../token/B/DFSTokenB.sol";
  * After adding multiple features it's good practice to run integration tests
  * to ensure that subcontracts works together as intended.
  */
-contract DFSBCrowdsale is Pausable, CappedCrowdsaleB {
+contract DFSBCrowdsale is Pausable, CrowdsaleB {
 
   // how many token units a buyer gets per wei
   mapping (uint => uint) internal swapRate;
 
   function DFSBCrowdsale(uint256 _startTime, uint256 _preSaleDays, address _tokenAddr, address _wallet)
-    CappedCrowdsaleB()
     CrowdsaleB(_startTime, _preSaleDays, _tokenAddr, _wallet)
   {
     swapRate[5] = 800;
