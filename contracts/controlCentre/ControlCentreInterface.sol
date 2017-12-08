@@ -4,7 +4,7 @@ contract ControlCentreInterface {
 
   bool public paused;
   address public owner;
-  address public token;
+  address public tokenAddr;
   address public dataCentreAddr;
 
   function pause() public;

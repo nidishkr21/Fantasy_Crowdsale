@@ -46,7 +46,7 @@ contract('Crowdsale', (accounts) => {
       assert.equal(140000000e18, initialBalance.toNumber(), 'initialBalance for sale NOT distributed properly');
 
       //checking token and wallet address
-      const tokenAddress = await dfsACrowdsale.token.call();
+      const tokenAddress = await dfsACrowdsale.tokenAddr.call();
       const walletAddress = await dfsACrowdsale.wallet.call();
       assert.equal(tokenAddress, tokenA.address, 'address for tokenA in contract not set');
       assert.equal(walletAddress, multisigWallet.address, 'address for multisig wallet in contract not set');
@@ -80,7 +80,7 @@ contract('Crowdsale', (accounts) => {
       const tokenNew = await DFSTokenA.new("0x00");
       await dfsACrowdsale.pause();
       await dfsACrowdsale.setContracts(tokenNew.address, multiSigNew.address);
-      const tokenSet = await dfsACrowdsale.token.call();
+      const tokenSet = await dfsACrowdsale.tokenAddr.call();
       const multiSigWalletSet = await dfsACrowdsale.wallet.call();
       assert.equal(tokenSet, tokenNew.address, 'contracts not set');
       assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');
@@ -113,7 +113,7 @@ contract('Crowdsale', (accounts) => {
       assert.equal(30000000e18, initialBalance.toNumber(), 'initialBalance for sale NOT distributed properly');
 
       //checking token and wallet address
-      const tokenAddress = await dfsBCrowdsale.token.call();
+      const tokenAddress = await dfsBCrowdsale.tokenAddr.call();
       const walletAddress = await dfsBCrowdsale.wallet.call();
       assert.equal(tokenAddress, tokenB.address, 'address for tokenB in contract not set');
       assert.equal(walletAddress, multisigWallet.address, 'address for multisig wallet in contract not set');
@@ -147,7 +147,7 @@ contract('Crowdsale', (accounts) => {
       const tokenNew = await DFSTokenB.new("0x00");
       await dfsBCrowdsale.pause();
       await dfsBCrowdsale.setContracts(tokenNew.address, multiSigNew.address);
-      const tokenSet = await dfsBCrowdsale.token.call();
+      const tokenSet = await dfsBCrowdsale.tokenAddr.call();
       const multiSigWalletSet = await dfsBCrowdsale.wallet.call();
       assert.equal(tokenSet, tokenNew.address, 'contracts not set');
       assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');

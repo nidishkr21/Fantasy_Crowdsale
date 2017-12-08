@@ -1,6 +1,5 @@
 pragma solidity ^0.4.11;
 
-import '../../token/B/DFSTokenB.sol';
 import '../../SafeMath.sol';
 
 /**
@@ -14,7 +13,7 @@ import '../../SafeMath.sol';
 contract CrowdsaleB {
   using SafeMath for uint256;
   // The token being sold
-  DFSTokenB public token;
+  address public tokenAddr;
 
   // start and end timestamps where investments are allowed (both inclusive)
   uint256 public startTime;
@@ -37,14 +36,14 @@ contract CrowdsaleB {
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
 
-  function CrowdsaleB(uint256 _startTime, uint256 _preSaleDays, address _token, address _wallet) {
+  function CrowdsaleB(uint256 _startTime, uint256 _preSaleDays, address _tokenAddr, address _wallet) {
     require(_wallet != address(0));
 
     startTime = _startTime;
     preSaleTime = _preSaleDays.mul(1 days);
     endTime = startTime + preSaleTime + (31 days);
     wallet = _wallet;
-    token = DFSTokenB(_token);
+    tokenAddr = _tokenAddr;
   }
 
   // fallback function can be used to buy tokens

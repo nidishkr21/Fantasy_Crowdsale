@@ -21,9 +21,9 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
   // how many token units a buyer gets per wei
   mapping (uint => uint) internal swapRate;
 
-  function DFSACrowdsale(uint256 _startTime, uint256 _preSaleDays, address _token, address _wallet)
+  function DFSACrowdsale(uint256 _startTime, uint256 _preSaleDays, address _tokenAddr, address _wallet)
     CappedCrowdsaleA()
-    CrowdsaleA(_startTime, _preSaleDays, _token, _wallet)
+    CrowdsaleA(_startTime, _preSaleDays, _tokenAddr, _wallet)
   {
     swapRate[5] = 4000;
     swapRate[4] = 3200;
@@ -50,13 +50,13 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     }
   }
 
-  function setContracts(address _token, address _wallet) onlyAdmins whenPaused {
+  function setContracts(address _tokenAddr, address _wallet) onlyAdmins whenPaused {
     wallet = _wallet;
-    token = DFSTokenA(_token);
+    tokenAddr = _tokenAddr;
   }
 
   function transferTokenOwnership(address _nextOwner) onlyAdmins whenPaused {
-    token.transferOwnership(_nextOwner);
+    DFSTokenA(tokenAddr).transferOwnership(_nextOwner);
   }
 
   // overriding buyTokens function from CrowdsaleA
@@ -83,7 +83,7 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     setSupply(totalSupply[phase].add(tokens), phase);
     // update state
     weiRaised = weiRaised.add(weiAmount);
-    token.mint(beneficiary, tokens);
+    DFSTokenA(tokenAddr).mint(beneficiary, tokens);
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
     forwardFunds(weiAmount);
   }
