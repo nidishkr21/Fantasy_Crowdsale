@@ -12,7 +12,7 @@ contract DFSTokenBControl is ERC20, DataManagerB {
   bool public mintingFinished = false;
 
   event Mint(address indexed to, uint256 amount);
-  event MintFinished();
+  event MintToggle(bool status);
 
   modifier canMint() {
     require(!mintingFinished);
@@ -89,9 +89,15 @@ contract DFSTokenBControl is ERC20, DataManagerB {
     return true;
   }
 
-  function finishMinting() whenNotPaused onlyOwner public returns (bool) {
+  function startMinting() onlyOwner public returns (bool) {
+    mintingFinished = false;
+    MintToggle(mintingFinished);
+    return true;
+  }
+
+  function finishMinting() onlyOwner public returns (bool) {
     mintingFinished = true;
-    MintFinished();
+    MintToggle(mintingFinished);
     return true;
   }
 }
