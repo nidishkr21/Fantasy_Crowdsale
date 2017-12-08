@@ -19,8 +19,8 @@ contract DFSTokenAControl is ERC20, DataManagerA {
     _;
   }
 
-  function DFSTokenAControl()
-    DataManagerA() {
+  function DFSTokenAControl(address _dataCentreAddr)
+    DataManagerA(_dataCentreAddr) {
 
   }
 

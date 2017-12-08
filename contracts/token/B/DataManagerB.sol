@@ -8,8 +8,8 @@ contract DataManagerB is PausableToken {
   // satelite contract addresses
   address public dataCentreAddr;
 
-  function DataManagerB() {
-    dataCentreAddr = address(createDataCentre());
+  function DataManagerB(address _dataCentreAddr) {
+    dataCentreAddr = _dataCentreAddr == address(0) ? address(createDataCentre()) : _dataCentreAddr;
   }
 
   function setDataCentreAddress(address _dataCentreAddr) public onlyOwner whenPaused {

@@ -17,18 +17,17 @@ contract DFSTokenB is DFSTokenBControl {
   string public constant symbol = "DFA";
   uint8 public constant decimals = 18;
   uint256 public constant INITIAL_SUPPLY = 30000000 * (10 ** uint256(decimals));
-  bool internal initalSupplySet = false;
 
   /**
    * @dev Constructor that gives msg.sender all of existing tokens.
    */
-  function DFSTokenB()
-    DFSTokenBControl()
+  function DFSTokenB(address _dataCentreAddr)
+    DFSTokenBControl(_dataCentreAddr)
   {
-    // initial token distribution to be put in here
-    require(initalSupplySet == false);
-    _setTotalSupplyDFB(INITIAL_SUPPLY);
-    _setDFBBalanceOf(msg.sender, INITIAL_SUPPLY);
-    initalSupplySet = true;
+    if (_dataCentreAddr == address(0)) {
+      // initial token distribution to be put in here
+      _setTotalSupplyDFB(INITIAL_SUPPLY);
+      _setDFBBalanceOf(msg.sender, INITIAL_SUPPLY);
+    }
   }
 }
