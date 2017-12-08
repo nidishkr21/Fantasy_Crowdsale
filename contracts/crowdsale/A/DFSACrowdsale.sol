@@ -73,7 +73,6 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     uint256 tokens = weiAmount.mul(rate());
 
     if(!withSoftCap(phase, tokens)) {
-      end[phase] = true;
       uint256 refund = (tokens.add(totalSupply[phase]).sub(softCap[phase])).div(rate());
       tokens = softCap[phase].sub(totalSupply[phase]);
       weiAmount = weiAmount.sub(refund);
@@ -81,6 +80,8 @@ contract DFSACrowdsale is Pausable, CappedCrowdsaleA {
     }
 
     setSupply(totalSupply[phase].add(tokens), phase);
+    end[phase] = totalSupply[phase] == softCap[phase] ? true : false;
+
     // update state
     weiRaised = weiRaised.add(weiAmount);
     DFSTokenA(tokenAddr).mint(beneficiary, tokens);

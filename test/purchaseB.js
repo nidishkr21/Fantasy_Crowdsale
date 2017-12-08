@@ -249,9 +249,133 @@ contract('DFSBCrwodsale', (accounts) => {
       assert.equal(balanceInvestor.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
     });
 
+    it('should refund investors when buying above Pre Sale cap in 2 stages', async () => {
+
+      const INVESTORS = accounts[4];
+      const LAST_MIN_BUYER = accounts[5];
+      const swapRate = new BigNumber(800);
+      const amountEth1 = new BigNumber(37499).mul(MOCK_ONE_ETH);
+      const tokensAmount1 = amountEth1.mul(swapRate);
+      const softCap = await dfsBCrowdsale.softCap.call(0);
+
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTORS, {value: amountEth1, from: INVESTORS, gasPrice: 0});
+
+      const balanceInvestor = await tokenB.balanceOf.call(INVESTORS);
+      assert.equal(balanceInvestor.toNumber(), tokensAmount1.toNumber(), 'tokens not deposited');
+
+      const walletBalanceBefore = await web3.eth.getBalance(multisigWallet.address);
+      const amountEth2 = new BigNumber(2).mul(MOCK_ONE_ETH);
+      const tokensAmount2 = amountEth2.mul(swapRate);
+      const balanceBefore = await web3.eth.getBalance(LAST_MIN_BUYER);
+
+      await dfsBCrowdsale.buyTokens(LAST_MIN_BUYER, {value: amountEth2, from: LAST_MIN_BUYER, gasPrice: 0});
+
+      const walletBalanceAfter = await web3.eth.getBalance(multisigWallet.address);
+      const balanceBuyer = await tokenB.balanceOf.call(LAST_MIN_BUYER);
+      const balanceAfter = await web3.eth.getBalance(LAST_MIN_BUYER);
+      const ethInvested = balanceBefore.sub(balanceAfter);
+      const ethRefunded = amountEth2.sub(balanceBefore).add(balanceAfter);
+      const ethRefundedCal = (tokensAmount1.add(tokensAmount2).sub(softCap)).div(swapRate);
+      const totalSupply = await dfsBCrowdsale.totalSupply.call(0);
+      assert.equal(totalSupply.toNumber(), softCap.toNumber(), 'rounding errors encountered');
+      assert.equal(ethRefundedCal.toNumber(), ethRefunded.toNumber(), 'amount refunded not correct');
+      assert.equal(walletBalanceAfter.sub(walletBalanceBefore).toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
+      assert.equal(balanceBuyer.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
+    });
+
+    it('should refund investors when buying above Crowdsale cap in 2 stages', async () => {
+
+
+      const INVESTORS = accounts[4];
+      const LAST_MIN_BUYER = accounts[5];
+      const swapRate = new BigNumber(640);
+      const amountEth1 = new BigNumber(62499).mul(MOCK_ONE_ETH);
+      const tokensAmount1 = amountEth1.mul(swapRate);
+      const softCap = await dfsBCrowdsale.softCap.call(1);
+
+      // forward time by PRE_SALE_DAYS days
+      await increaseTime(86400 * PRE_SALE_DAYS);
+
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTORS, {value: amountEth1, from: INVESTORS, gasPrice: 0});
+
+      const balanceInvestor = await tokenB.balanceOf.call(INVESTORS);
+      assert.equal(balanceInvestor.toNumber(), tokensAmount1.toNumber(), 'tokens not deposited');
+
+      const walletBalanceBefore = await web3.eth.getBalance(multisigWallet.address);
+      const amountEth2 = new BigNumber(2).mul(MOCK_ONE_ETH);
+      const tokensAmount2 = amountEth2.mul(swapRate);
+      const balanceBefore = await web3.eth.getBalance(LAST_MIN_BUYER);
+
+      await dfsBCrowdsale.buyTokens(LAST_MIN_BUYER, {value: amountEth2, from: LAST_MIN_BUYER, gasPrice: 0});
+
+      const walletBalanceAfter = await web3.eth.getBalance(multisigWallet.address);
+      const balanceBuyer = await tokenB.balanceOf.call(LAST_MIN_BUYER);
+      const balanceAfter = await web3.eth.getBalance(LAST_MIN_BUYER);
+      const ethInvested = balanceBefore.sub(balanceAfter);
+      const ethRefunded = amountEth2.sub(balanceBefore).add(balanceAfter);
+      const ethRefundedCal = (tokensAmount1.add(tokensAmount2).sub(softCap)).div(swapRate);
+      const totalSupply = await dfsBCrowdsale.totalSupply.call(1);
+      assert.equal(totalSupply.toNumber(), softCap.toNumber(), 'rounding errors encountered');
+      assert.equal(ethRefundedCal.toNumber(), ethRefunded.toNumber(), 'amount refunded not correct');
+      assert.equal(walletBalanceAfter.sub(walletBalanceBefore).toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
+      assert.equal(balanceBuyer.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
+    });
+
   });
 
   describe('#endReached', () => {
+    it('should not allow investors to buy after cap reached during Institutional Pre Sale', async () => {
+
+      const INVESTORS = accounts[4];
+      const swapRate = new BigNumber(800);
+      const amountEth = new BigNumber(37500).mul(MOCK_ONE_ETH);
+      const balanceBefore = await web3.eth.getBalance(INVESTORS);
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTORS, {value: amountEth, from: INVESTORS, gasPrice: 0});
+      const walletBalance = await web3.eth.getBalance(multisigWallet.address);
+      const balanceInvestor = await tokenB.balanceOf.call(INVESTORS);
+      const balanceAfter = await web3.eth.getBalance(INVESTORS);
+      const ethInvested = balanceBefore.sub(balanceAfter);
+      assert.equal(walletBalance.toNumber(), amountEth.toNumber(), 'full amount transfer still took place');
+      assert.equal(walletBalance.toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
+      assert.equal(balanceInvestor.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
+
+      try {
+        await dfsBCrowdsale.buyTokens(INVESTORS, {value: MOCK_ONE_ETH, from: INVESTORS, gasPrice: 0})
+      } catch(error) {
+        assertJump(error);
+      }
+    });
+
+    it('should not allow investors to buy after cap reached during Public Pre Sale', async () => {
+
+      const INVESTORS = accounts[4];
+      const swapRate = new BigNumber(640);
+      const amountEth = new BigNumber(62500).mul(MOCK_ONE_ETH);
+      const balanceBefore = await web3.eth.getBalance(INVESTORS);
+
+      // forward time by 20 days
+      await increaseTime(86400 * 10);
+
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTORS, {value: amountEth, from: INVESTORS, gasPrice: 0});
+      const walletBalance = await web3.eth.getBalance(multisigWallet.address);
+      const balanceInvestor = await tokenB.balanceOf.call(INVESTORS);
+      const balanceAfter = await web3.eth.getBalance(INVESTORS);
+      const ethInvested = balanceBefore.sub(balanceAfter);
+      assert.equal(walletBalance.toNumber(), amountEth.toNumber(), 'full amount transfer still took place');
+      assert.equal(walletBalance.toNumber(), ethInvested.toNumber(), 'ether not deposited into wallet');
+      assert.equal(balanceInvestor.toNumber(), ethInvested.mul(swapRate).toNumber(), 'balance not added for investor');
+
+      try {
+        await dfsBCrowdsale.buyTokens(INVESTORS, {value: MOCK_ONE_ETH, from: INVESTORS, gasPrice: 0})
+      } catch(error) {
+        assertJump(error);
+      }
+    });
+    
     it('should not allow investors to buy after cap reached during Pre Sale', async () => {
 
       const INVESTORS = accounts[4];
