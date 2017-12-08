@@ -27,6 +27,28 @@ contract('DFSACrwodsale', (accounts) => {
     await dfsACrowdsale.unpause();
   });
 
+  it('should allow succesful completion', async () => {
+
+    const amountEth = [new BigNumber(15000).mul(MOCK_ONE_ETH), new BigNumber(62500).mul(MOCK_ONE_ETH)];
+
+    const INVESTORS = accounts[4];
+    await dfsACrowdsale.buyTokens(INVESTORS, {value: amountEth[0], from: INVESTORS});
+
+    // forward time by PRE_SALE_DAYS days
+    await increaseTime(86400 * PRE_SALE_DAYS);
+    await dfsACrowdsale.buyTokens(INVESTORS, {value: amountEth[1], from: INVESTORS});
+
+    // check succesful completetion
+    const totalSupply = [(await dfsACrowdsale.totalSupply.call(0)).toNumber(), (await dfsACrowdsale.totalSupply.call(1)).toNumber()];
+    const softCap = [(await dfsACrowdsale.softCap.call(0)).toNumber(), (await dfsACrowdsale.softCap.call(1)).toNumber()];
+    const initialSupply = await tokenA.INITIAL_SUPPLY.call();
+    const tokenTotalSupply = await tokenA.totalSupply.call();
+
+    assert.equal(totalSupply[0], softCap[0]);
+    assert.equal(totalSupply[1], softCap[1]);
+    assert.equal(initialSupply.add(totalSupply[0]).add(totalSupply[1]).toNumber(), tokenTotalSupply.toNumber());
+  });
+
   describe('#purchase', () => {
     it('should allow investors to buy tokens in Pre Sale at 4000 swapRate', async () => {
 
