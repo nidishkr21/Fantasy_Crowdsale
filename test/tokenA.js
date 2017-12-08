@@ -316,4 +316,38 @@ contract('DFSTokenA', (accounts) => {
       assert.equal(changedOwner, tokenA.address, 'ownership not transferred back');
     });
   });
+
+  describe('#upgradability', () => {
+
+    it('should allow to upgrade token contract manually', async () => {
+
+      const swapRate = new BigNumber(4000);
+      const INVESTOR = accounts[4];
+      const BENEFICIARY = accounts[5];
+      // buy tokens
+      await dfsACrowdsale.buyTokens(INVESTOR, {value: MOCK_ONE_ETH, from: INVESTOR});
+      const tokensBalance = await tokenA.balanceOf.call(INVESTOR);
+      const tokensAmount = swapRate.mul(MOCK_ONE_ETH);
+      assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
+
+      // // begin the upgrade process
+      await dfsACrowdsale.pause();
+      await dfsACrowdsale.transferTokenOwnership(accounts[0]);
+      await tokenA.pause();
+      await tokenA.transferDataCentreOwnership(accounts[0]);
+
+      // deploy new token contract
+      const dataCentre = await DataCentre.at(await tokenA.dataCentreAddr());
+      const tokenNew = await DFSTokenA.new(dataCentre.address);
+      await dataCentre.transferOwnership(tokenNew.address);
+      const dataCentreSet = await tokenNew.dataCentreAddr.call();
+      assert.equal(dataCentreSet, dataCentre.address, 'dataCentre not set');
+
+
+      // try a transfer operation in the new token contract
+      await tokenNew.transfer(BENEFICIARY, tokensBalance, {from: INVESTOR});
+      const tokenBalanceTransfered = await tokenA.balanceOf.call(BENEFICIARY);
+      assert.equal(tokensBalance.toNumber(), tokenBalanceTransfered.toNumber(), 'tokens not transferred');
+    });
+  })
 })
