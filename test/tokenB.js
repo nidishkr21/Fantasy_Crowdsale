@@ -1,4 +1,5 @@
 const MockDFSBCrowdsale = artifacts.require('./helpers/MockDFSBCrowdsale.sol');
+const ERC223Receiver = artifacts.require('./helpers/ERC223ReceiverMock.sol');
 const DFSTokenB = artifacts.require('./token/B/DFSTokenB.sol');
 const DataCentre = artifacts.require('./token/DataCentre.sol');
 const MultisigWallet = artifacts.require('./multisig/MultiSigWalletWithDailyLimit.sol');
@@ -97,6 +98,50 @@ contract('DFSTokenB', (accounts) => {
         assertJump(error);
         const tokenBalanceTransfered = await tokenB.balanceOf.call(BENEFICIARY);
         assert.equal(tokenBalanceTransfered.toNumber(), 0, 'tokens not transferred');
+      }
+    });
+
+    it('should allow transferring to a ERC223 Receiver contract', async () => {
+
+      const swapRate = new BigNumber(800);
+      const INVESTOR = accounts[4];
+      const receiver = await ERC223Receiver.new();
+      const BENEFICIARY = receiver.address;
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTOR, {value: MOCK_ONE_ETH, from: INVESTOR});
+      const walletBalance = await web3.eth.getBalance(multisigWallet.address);
+      const tokensBalance = await tokenB.balanceOf.call(INVESTOR);
+
+      const tokensAmount = swapRate.mul(MOCK_ONE_ETH);
+      assert.equal(walletBalance.toNumber(), MOCK_ONE_ETH, 'ether not deposited into the wallet');
+      assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
+
+      await tokenB.transfer(BENEFICIARY, tokensBalance, {from: INVESTOR});
+      const tokenBalanceTransfered = await tokenB.balanceOf.call(BENEFICIARY);
+      const receiverCalled = await receiver.called.call();
+      assert.equal(tokensBalance.toNumber(), tokenBalanceTransfered.toNumber(), 'tokens not transferred');
+      assert.equal(receiverCalled, true, 'tokens not transferred');
+    });
+
+    it('should not allow transferring to a non ERC223 contract', async () => {
+
+      const swapRate = new BigNumber(800);
+      const INVESTOR = accounts[4];
+      const BENEFICIARY = dfsBCrowdsale.address;
+      // buy tokens
+      await dfsBCrowdsale.buyTokens(INVESTOR, {value: MOCK_ONE_ETH, from: INVESTOR});
+      const walletBalance = await web3.eth.getBalance(multisigWallet.address);
+      const tokensBalance = await tokenB.balanceOf.call(INVESTOR);
+
+      const tokensAmount = swapRate.mul(MOCK_ONE_ETH);
+      assert.equal(walletBalance.toNumber(), MOCK_ONE_ETH, 'ether not deposited into the wallet');
+      assert.equal(tokensBalance.toNumber(), tokensAmount.toNumber(), 'tokens not deposited into the INVESTOR balance');
+
+      try {
+        await tokenB.transfer(BENEFICIARY, tokensBalance, {from: INVESTOR});
+      } catch(error) {
+        const tokenBalanceTransfered = await tokenB.balanceOf.call(BENEFICIARY);
+        assert.equal(tokenBalanceTransfered.toNumber(), 0, 'tokens still transferred');
       }
     });
   });
