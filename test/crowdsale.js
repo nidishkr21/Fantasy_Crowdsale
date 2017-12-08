@@ -85,6 +85,38 @@ contract('Crowdsale', (accounts) => {
       assert.equal(tokenSet, tokenNew.address, 'contracts not set');
       assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');
     });
+
+    it('should not allow to transfer ownership of token contract by scammer', async () => {
+      // pause and transfer ownership
+      const SCAMMER = accounts[5];
+      await dfsACrowdsale.pause();
+      try {
+        await dfsACrowdsale.transferTokenOwnership(multisigWallet.address, {from: SCAMMER});
+        assert.fail('should have failed before');
+      } catch (error) {
+        assertJump(error);
+        const newOwner = await tokenA.owner.call();
+        assert.equal(newOwner, dfsACrowdsale.address, 'ownership not transferred');
+      }
+    });
+
+    it('should not allow to set contracts by scammer', async () => {
+      // pause and transfer ownership
+      const SCAMMER = accounts[5];
+      const multiSigNew = await MultisigWallet.new(FOUNDERS, 3, 10*MOCK_ONE_ETH);
+      const tokenNew = await DFSTokenA.new();
+      await dfsACrowdsale.pause();
+      try {
+        await dfsACrowdsale.setContracts(tokenNew.address, multiSigNew.address, {from: SCAMMER});
+        assert.fail('should have failed before');
+      } catch (error) {
+        assertJump(error);
+        const tokenSet = await dfsACrowdsale.tokenAddr.call();
+        const multiSigWalletSet = await dfsACrowdsale.wallet.call();
+        assert.equal(tokenSet, tokenA.address, 'contracts still set');
+        assert.equal(multiSigWalletSet, multisigWallet.address, 'contracts still set');
+      }
+    });
   });
 
   describe('#CrowdsaleB details', () => {
@@ -151,6 +183,38 @@ contract('Crowdsale', (accounts) => {
       const multiSigWalletSet = await dfsBCrowdsale.wallet.call();
       assert.equal(tokenSet, tokenNew.address, 'contracts not set');
       assert.equal(multiSigWalletSet, multiSigNew.address, 'contracts not set');
+    });
+
+    it('should not allow to transfer ownership of token contract by scammer', async () => {
+      // pause and transfer ownership
+      const SCAMMER = accounts[5];
+      await dfsBCrowdsale.pause();
+      try {
+        await dfsBCrowdsale.transferTokenOwnership(multisigWallet.address, {from: SCAMMER});
+        assert.fail('should have failed before');
+      } catch (error) {
+        assertJump(error);
+        const newOwner = await tokenB.owner.call();
+        assert.equal(newOwner, dfsBCrowdsale.address, 'ownership not transferred');
+      }
+    });
+
+    it('should not allow to set contracts by scammer', async () => {
+      // pause and transfer ownership
+      const SCAMMER = accounts[5];
+      const multiSigNew = await MultisigWallet.new(FOUNDERS, 3, 10*MOCK_ONE_ETH);
+      const tokenNew = await DFSTokenB.new();
+      await dfsBCrowdsale.pause();
+      try {
+        await dfsBCrowdsale.setContracts(tokenNew.address, multiSigNew.address, {from: SCAMMER});
+        assert.fail('should have failed before');
+      } catch (error) {
+        assertJump(error);
+        const tokenSet = await dfsBCrowdsale.tokenAddr.call();
+        const multiSigWalletSet = await dfsBCrowdsale.wallet.call();
+        assert.equal(tokenSet, tokenB.address, 'contracts still set');
+        assert.equal(multiSigWalletSet, multisigWallet.address, 'contracts still set');
+      }
     });
   })
 });
