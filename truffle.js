@@ -22,9 +22,10 @@ module.exports = {
     development: {
       host: "localhost",
       port: 9000,
+      gas: 4500000,
       network_id: "*" // Match any network id
     },
-    
+
     rinkeby: {
       host: "localhost",
       port: 8545,
@@ -37,7 +38,7 @@ module.exports = {
       host: "localhost",
       network_id: "*",
       port: 8555,
-      gas: 0xfffffffffff,
+      gas: '0x6fffffff',
       gasPrice: 0x01
     }
   },
